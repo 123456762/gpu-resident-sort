@@ -34,7 +34,7 @@ jobs:
         run: |
           CCG_SIZES=1000000,4000000,8000000 python3 组件/c_codegen_sort.py --矩阵 | tee codegen_matrix_pc.log
       - name: 生成源码（供 artifact/人工复核）
-        run: python3 组件/c_codegen_sort.py --生成 radix16,radix8 --输出 /tmp/sort_gen_pc.c
+        run: python3 组件/c_codegen_sort.py --生成 radix16,radix8 --输出 sort_gen_pc.c
       - name: 原生交叉编译自检
         run: |
           python3 组件/c_codegen_sort.py --交叉编译 || true
@@ -45,4 +45,4 @@ jobs:
           path: |
             profile_pc.json
             codegen_matrix_pc.log
-            /tmp/sort_gen_pc.c
+            sort_gen_pc.c
