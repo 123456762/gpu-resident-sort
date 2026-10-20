@@ -1,0 +1,16 @@
+/* GPU 紧凑: pad 桶窗口 → 连续输出 —— 2026-10-20 E3213
+ * 目的：把原先 CPU 的 40MB memcpy + 65536 循环搬到 GPU。
+ * binding0=pad, binding1=count, binding2=offsets(CPU 前缀和), binding3=out(data 复用)。
+ * 每桶一个 workgroup(512 线程)。 */
+#version 450
+layout(local_size_x = 512) in;
+layout(set = 0, binding = 0, std430) readonly buffer Pad { uint pad[]; };
+layout(set = 0, binding = 1, std430) readonly buffer Cnt { uint count[]; };
+layout(set = 0, binding = 2, std430) readonly buffer Off { uint off[]; };
+layout(set = 0, binding = 3, std430) writeonly buffer Out { uint outv[]; };
+void main() {
+    uint b = gl_WorkGroupID.x;
+    uint t = gl_LocalInvocationID.x;
+    uint c = count[b];
+    if (t < c) outv[off[b] + t] = pad[b * 512u + t];
+}

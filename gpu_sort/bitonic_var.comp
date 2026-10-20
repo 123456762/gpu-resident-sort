@@ -1,0 +1,28 @@
+#version 450
+/* 桶内变长 bitonic：每个 workgroup 一个桶，桶长 ≤ 512（容量由 host 的 avg+6σ<450 保证）。
+ * binding0 = 紧凑输出 out，binding1 = offsets[bucket+1]；共享内存补 0xFFFFFFFF 后排序，只写回真实长度。
+ */
+layout(local_size_x = 512) in;
+layout(set=0, binding=0, std430) buffer Buf { uint v[]; };
+layout(set=0, binding=1, std430) readonly buffer OffBuf { uint offs[]; };
+shared uint s[512];
+void main(){
+    uint b = gl_WorkGroupID.x;
+    uint lo = offs[b], hi = offs[b+1], n = hi - lo;
+    uint t = gl_LocalInvocationID.x;
+    s[t] = (t < n) ? v[lo + t] : 0xFFFFFFFFu;
+    barrier();
+    for(uint k=2;k<=512u;k<<=1){
+        for(uint j=k>>1;j>0u;j>>=1){
+            uint ixj = t ^ j;
+            if(ixj > t){
+                int asc = ((t & k) == 0u) ? 1 : 0;
+                uint a = s[t], c = s[ixj];
+                int do_swap = (asc != 0) ? ((a > c) ? 1 : 0) : ((a < c) ? 1 : 0);
+                if(do_swap != 0){ s[t]=c; s[ixj]=a; }
+            }
+            barrier();
+        }
+    }
+    if(t < n) v[lo + t] = s[t];
+}

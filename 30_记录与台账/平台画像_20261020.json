@@ -1,0 +1,47 @@
+{
+ "schema_version": 1,
+ "target_id": "adreno_829_uma",
+ "architecture": {
+  "cpu_isa": "armv8+",
+  "cores": 8,
+  "gpu_backend": "vulkan",
+  "gpu_name": "Adreno (TM) 829",
+  "memory_model": "UMA",
+  "bandwidth_read_gbps": 57.0,
+  "bandwidth_write_gbps": 53.0,
+  "cache_l2_mb": null
+ },
+ "features": {
+  "persistent_buffer": true,
+  "double_buffer": false,
+  "host_visible": true,
+  "shared_memory": false,
+  "device_local_host_visible": true
+ },
+ "backends": {
+  "cpu_c": true,
+  "vulkan": true,
+  "opencl": false,
+  "cuda": false
+ },
+ "measured_thresholds": {
+  "gpu_min_n": 1000000,
+  "gpu_max_inline": 8000000,
+  "chunk_size": 8000000,
+  "cache_overflow_n": 16000000
+ },
+ "measured_ms": {
+  "gpu_fresh_1m": 12.9,
+  "gpu_fresh_4m": 39.8,
+  "gpu_fresh_8m": 74.1,
+  "gpu_fresh_16m": 453.8,
+  "c_random_1m": 11.2,
+  "c_random_4m": 46.2,
+  "c_radix8q_8m": 64.9,
+  "c_radix8q_16m": 167.5
+ },
+ "provenance": {
+  "source": "本机自动检测（Termux/Android + UMA）",
+  "detected": true
+ }
+}

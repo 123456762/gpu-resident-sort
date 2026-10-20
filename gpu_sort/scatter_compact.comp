@@ -1,0 +1,19 @@
+#version 450
+/* 紧凑散射：桶区间连续输出（T-344 原型）
+ * binding0 输入 data，binding1 输出 out[n]，binding2 桶起点 offsets[桶数+1]，binding3 桶内游标 wpos。
+ * 与旧 scatter16 的区别：不再写 65536*512 的 pad，随机写工作集从 128MB 降到 n*4。
+ */
+layout(local_size_x = 256) in;
+layout(set=0, binding=0, std430) readonly buffer InBuf { uint data[]; };
+layout(set=0, binding=1, std430) buffer OutBuf { uint odata[]; };
+layout(set=0, binding=2, std430) readonly buffer OffBuf { uint offs[]; };
+layout(set=0, binding=3, std430) buffer WposBuf { uint wpos[]; };
+layout(push_constant) uniform PC { uint shift; uint n; uint mask; uint slots; uint sub; } pc;
+void main(){
+    uint i = gl_GlobalInvocationID.x;
+    if(i >= pc.n) return;
+    uint key = data[i] - pc.sub;
+    uint b = (key >> pc.shift) & pc.mask;
+    uint slot = atomicAdd(wpos[b], 1u);
+    odata[offs[b] + slot] = data[i];
+}

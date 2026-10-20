@@ -1,0 +1,8 @@
+/* GPU 填充: 把 buffer 全写成 0xFFFFFFFF（pad 哨兵 / count 清零）—— 2026-10-20 E3213
+ * 目的：把原先 CPU 的 128MB memset 搬到 GPU，减少 CPU 压力（存算一体第一步）。
+ * binding0 = 目标 uint[]；push n = 元素个数。 */
+#version 450
+layout(local_size_x = 256) in;
+layout(set = 0, binding = 0, std430) writeonly buffer B { uint v[]; };
+layout(push_constant) uniform PC { uint n; uint val; } pc;
+void main() { uint i = gl_GlobalInvocationID.x; if (i < pc.n) v[i] = pc.val; }

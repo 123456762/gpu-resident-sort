@@ -1,0 +1,28 @@
+/* GPU 桶内排序: bitonic 网络 256 元素(MSD 分桶后每桶一个 workgroup)
+ * 稳定(无竞争, 排序网络), 全程 GPU —— 2026-09-01
+ * 布局: 桶 b 的 256 槽 = d[b*256 + 0..255](pad), workgroup 每桶 */
+#version 450
+layout(local_size_x = 512) in;
+layout(set=0, binding=0, std430) buffer Data { uint d[]; };
+shared uint s[512];
+void main(){
+    uint wid = gl_WorkGroupID.x;
+    uint lid = gl_LocalInvocationID.x;
+    uint base = wid * 512;
+    s[lid] = d[base + lid];
+    barrier();
+    for(uint k = 2; k <= 512; k <<= 1){
+        for(uint j = k >> 1; j > 0; j >>= 1){
+            uint ixj = lid ^ j;
+            if(ixj > lid){
+                if((lid & k) == 0u){
+                    if(s[lid] > s[ixj]){ uint t = s[lid]; s[lid] = s[ixj]; s[ixj] = t; }
+                } else {
+                    if(s[lid] < s[ixj]){ uint t = s[lid]; s[lid] = s[ixj]; s[ixj] = t; }
+                }
+            }
+            barrier();
+        }
+    }
+    d[base + lid] = s[lid];
+}

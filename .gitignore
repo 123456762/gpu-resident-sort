@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# C / Vulkan 构建产物
+*.o
+*.a
+*.so
+*.out
+*.spv
+build/
+gpu_sort/bench_off/
+gpu_sort/*.bin
+gpu_res/
+
+# Lean
+.lake/
+*.olean
+*.ilean
+*.trace
+
+# 运行/实验产物
+*.log
+运行记录/
+验证证书/
+
+# OS/编辑器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

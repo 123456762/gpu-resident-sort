@@ -1,0 +1,48 @@
+name: pc-codegen
+
+# E3227：真实 x86_64 Linux 上跑 profile 检测 + C 代码生成/编译/证书 + 原生矩阵。
+# 触发：push 或手动 workflow_dispatch；免费 GitHub-hosted ubuntu-latest 即真实 PC（R1 第三方基准）。
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate-and-certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 安装 numpy
+        run: python -m pip install --quiet numpy
+      - name: 平台画像检测（PC 不应再命中小米/Adreno）
+        run: |
+          python3 组件/platform_profile.py --检测 | tee profile_pc.json
+          python3 - <<'PY'
+          import json
+          p = json.load(open("profile_pc.json"))
+          assert p["target_id"] != "adreno_829_uma", "PC runner 误判成手机 profile"
+          print("PC profile:", p["target_id"], p["architecture"]["memory_model"])
+          PY
+      - name: C 生成器矩阵（真实 x86_64 执行 + 证书）
+        run: |
+          CCG_SIZES=1000000,4000000,8000000 python3 组件/c_codegen_sort.py --矩阵 | tee codegen_matrix_pc.log
+      - name: 生成源码（供 artifact/人工复核）
+        run: python3 组件/c_codegen_sort.py --生成 radix16,radix8 --输出 /tmp/sort_gen_pc.c
+      - name: 原生交叉编译自检
+        run: |
+          python3 组件/c_codegen_sort.py --交叉编译 || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pc-codegen-evidence
+          path: |
+            profile_pc.json
+            codegen_matrix_pc.log
+            /tmp/sort_gen_pc.c
