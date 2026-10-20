@@ -13,6 +13,18 @@
 - **C 代码生成 MVP**：`radix8`/`radix16` → 单文件 C → `cc -O3` → 与 numpy 证书对账
 - **x86_64 CI**：`.github/workflows/pc-codegen.yml`（ubuntu-latest，artifact 留证据）
 
+## x86_64 CI（实测）
+
+GitHub Actions `ubuntu-24.04` 真实 x86_64，生成 C 后编译执行（证书全部 OK）：
+
+| n | radix16 生成 | radix8 生成 |
+|---|---|---|
+| 1M | **9.63 ms** | 14.96 ms |
+| 4M | **31.21 ms** | 57.68 ms |
+| 8M | **64.11 ms** | 118.70 ms |
+
+> 注意：PC profile 当前是 `generic_x86_64_pcie · memory_model=UNKNOWN`（未识别独显/PCIe），这些是 **CPU C 生成后端**在真实 x86 上的物理结果，不是 GPU 结果。
+
 ## Quick start
 
 ```bash
